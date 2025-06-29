@@ -31,44 +31,39 @@ def notificar_a_todos():
                 continue
 
 def gestionar_siguiente_carro():
-    """Lógica para decidir qué carro cruza a continuación."""
-    with bridge_lock:
-        global puente_ocupado, direccion_actual, coches_en_puente
+    """Lógica justa para decidir qué carro cruza a continuación, alternando direcciones."""
+    global puente_ocupado, direccion_actual, coches_en_puente
 
-        # Si hay carros esperando en la misma dirección y nadie esperando en la dirección opuesta,
-        # permitir que sigan cruzando en la misma dirección.
-        if direccion_actual and len(cola_espera[direccion_actual]) > 0 and len(cola_espera["NORTH" if direccion_actual == "SOUTH" else "SOUTH"]) == 0:
-            cliente_socket, client_address = cola_espera[direccion_actual].pop(0)
+    # Determinar el orden de chequeo para ser justos.
+    # Priorizamos la dirección opuesta a la que acaba de cruzar.
+    if direccion_actual == "NORTH":
+        direcciones_a_chequear = ["SOUTH", "NORTH"]
+    elif direccion_actual == "SOUTH":
+        direcciones_a_chequear = ["NORTH", "SOUTH"]
+    else:
+        # Si no había dirección (puente libre), usamos un orden por defecto.
+        direcciones_a_chequear = ["NORTH", "SOUTH"]
+
+    # Revisar las colas en el orden de prioridad que acabamos de determinar.
+    for dir in direcciones_a_chequear:
+        if len(cola_espera[dir]) > 0:
+            cliente_socket, client_address = cola_espera[dir].pop(0)
             puente_ocupado = True
+            direccion_actual = dir # Se establece la nueva dirección
             coches_en_puente = 1
-            print(f"Otorgando permiso al siguiente en cola: {client_address} para ir al {direccion_actual}")
+            print(f"Alternando dirección. Otorgando permiso a {client_address} para ir al {dir}")
             try:
                 cliente_socket.send("GRANT_CROSS\n".encode('utf-8'))
             except (socket.error, BrokenPipeError):
                 print(f"El cliente {client_address} se desconectó mientras esperaba. Intentando con el siguiente.")
                 coches_en_puente = 0
                 gestionar_siguiente_carro()
-            return
+            return # Salimos de la función una vez que se ha asignado un carro.
 
-        # Si no, revisar ambas colas en orden FIFO, sin depender de la dirección previa
-        for dir in ["NORTH", "SOUTH"]:
-            if len(cola_espera[dir]) > 0:
-                cliente_socket, client_address = cola_espera[dir].pop(0)
-                puente_ocupado = True
-                direccion_actual = dir
-                coches_en_puente = 1
-                print(f"Otorgando permiso al siguiente en cola: {client_address} para ir al {dir}")
-                try:
-                    cliente_socket.send("GRANT_CROSS\n".encode('utf-8'))
-                except (socket.error, BrokenPipeError):
-                    print(f"El cliente {client_address} se desconectó mientras esperaba. Intentando con el siguiente.")
-                    coches_en_puente = 0
-                    gestionar_siguiente_carro()
-                return
-        # Si no hay nadie esperando
-        puente_ocupado = False
-        direccion_actual = None
-        coches_en_puente = 0
+    # Si después de chequear ambas colas no hay nadie esperando.
+    puente_ocupado = False
+    direccion_actual = None
+    coches_en_puente = 0
 
 def handle_client(client_socket, client_address):
     """Maneja la conexión de un solo cliente."""
