@@ -174,9 +174,11 @@ def carro_lifecycle(carro: Carro):
             carro.state = 'DRIVING_TO_BRIDGE'
             while carro.state == 'DRIVING_TO_BRIDGE': time.sleep(0.1)
 
+            # 3. Solicitar cruce y esperar
             carro.status_text = "Esperando permiso"
             carro.state = 'WAITING'
-            s.sendall(f"REQUEST_CROSS {carro.direction}\n".encode('utf-8'))
+            # --- MODIFICADO: enviar también el id del carro ---
+            s.sendall(f"REQUEST_CROSS {carro.direction} {carro.id}\n".encode('utf-8'))
             
             buffer = ""
             while True:
