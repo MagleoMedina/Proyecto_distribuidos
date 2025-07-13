@@ -48,7 +48,11 @@ class Carro:
         self.speed = self.original_speed
         y_pos = (BRIDGE_Y_CENTER - BRIDGE_HEIGHT / 4 - CAR_HEIGHT) if direction == 'NORTH' else (BRIDGE_Y_CENTER + BRIDGE_HEIGHT / 4)
         self.original_y = y_pos
-        self.start_pos_x = -CAR_WIDTH if direction == 'NORTH' else SIM_WIDTH
+        
+        # --- LÍNEA A CORREGIR ---
+        # La posición inicial de los carros del SUR debe ajustarse por su propio ancho.
+        self.start_pos_x = -CAR_WIDTH if direction == 'NORTH' else (SIM_WIDTH - CAR_WIDTH)
+        
         self.rect = pygame.Rect(self.start_pos_x, self.original_y, CAR_WIDTH, CAR_HEIGHT)
         self.state = 'IDLE'
 
@@ -75,12 +79,21 @@ class Carro:
             
             if self.direction == 'NORTH':
                 target_x = (front_car.rect.left - QUEUE_GAP - CAR_WIDTH) if front_car else (BRIDGE_START_X - 20 - CAR_WIDTH)
-                if self.rect.x < target_x: self.rect.x += self.speed
-                else: self.rect.x, self.state = target_x, 'WAITING'
+                if self.rect.x < target_x:
+                    self.rect.x += self.speed
+                    # Limitar para no pasar el borde de simulación
+                    if self.rect.right > SIM_WIDTH:
+                        self.rect.x = SIM_WIDTH - CAR_WIDTH
+                else:
+                    self.rect.x, self.state = target_x, 'WAITING'
             else: # SOUTH
                 target_x = (front_car.rect.right + QUEUE_GAP) if front_car else (BRIDGE_END_X + 20)
-                if self.rect.x > target_x: self.rect.x -= self.speed
-                else: self.rect.x, self.state = target_x, 'WAITING'
+                if self.rect.x > target_x:
+                    self.rect.x -= self.speed
+                    if self.rect.x < 0:
+                        self.rect.x = 0
+                else:
+                    self.rect.x, self.state = target_x, 'WAITING'
         
         # --- Lógica de cruce en el puente ---
         elif self.state == 'CROSSING':
@@ -103,11 +116,18 @@ class Carro:
         elif self.state == 'RETURNING':
             self.rect.y = self.original_y
             if self.direction == 'NORTH':
-                if self.rect.x < SIM_WIDTH + CAR_WIDTH: self.rect.x += self.speed
-                else: self.state = 'IDLE'
-            else:
-                if self.rect.right > -CAR_WIDTH: self.rect.x -= self.speed
-                else: self.state = 'IDLE'
+                # --- LÍNEA CORREGIDA ---
+                # Se elimina "+ CAR_WIDTH" para que el carro desaparezca justo en el borde.
+                if self.rect.x < SIM_WIDTH: 
+                    self.rect.x += self.speed
+                else: 
+                    self.state = 'IDLE'
+            else: # SOUTH
+                # Esta parte ya era correcta
+                if self.rect.right > -CAR_WIDTH: 
+                    self.rect.x -= self.speed
+                else: 
+                    self.state = 'IDLE'
 
     def draw(self, screen, font):
         pygame.draw.rect(screen, self.color, self.rect)
