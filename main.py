@@ -1,24 +1,17 @@
 import subprocess
 import time
 import sys
-import pygame
 
 def main():
     procesos = []
 
-    # Iniciar el servidor en un proceso separado
+    # Iniciar el servidor mejorado en un proceso separado
     print("Iniciando el servidor...")
-    servidor_proceso = subprocess.Popen([sys.executable, "servidor_puente.py"])
+    servidor_proceso = subprocess.Popen([sys.executable, "servidor.py"])
     procesos.append(servidor_proceso)
     time.sleep(2)  # Darle tiempo al servidor para que inicie
 
-    # Iniciar el Dashboard de Estadísticas
-    print("Iniciando el Dashboard de Estadísticas...")
-    dashboard_proceso = subprocess.Popen([sys.executable, "dashboard_estadisticas.py"])
-    procesos.append(dashboard_proceso)
-    time.sleep(1)
-
-    # Iniciar el Visualizador centralizado
+    # Iniciar el Visualizador centralizado y unificado
     print("Iniciando el Visualizador de la simulación...")
     visualizador_proceso = subprocess.Popen([sys.executable, "interfaz.py"])
     procesos.append(visualizador_proceso)
@@ -36,11 +29,8 @@ def main():
     except KeyboardInterrupt:
         print("\nTerminando la simulación...")
         for p in procesos:
-            # Usar terminate() para asegurar que los procesos hijos se cierren
             p.terminate()
         print("Todos los procesos han sido terminados.")
 
 if __name__ == "__main__":
     main()
-
-    
