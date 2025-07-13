@@ -56,10 +56,10 @@ class Carro:
         self.rect = pygame.Rect(self.start_pos_x, self.original_y, CAR_WIDTH, CAR_HEIGHT)
         self.state = 'IDLE'
 
-                # --- Reproducir música al iniciar ---
+        # --- Reproducir música al iniciar ---
         pygame.mixer.init()
         try:
-            pygame.mixer.music.load("assets/Dummy! - Toby Fox.mp3")
+            pygame.mixer.music.load("assets/Death By Glamour - Toby Fox.mp3")
             pygame.mixer.music.play(-1)  # Repetir indefinidamente
         except Exception as e:
             print(f"Error al reproducir música: {e}")
@@ -313,7 +313,7 @@ def draw_stats_panel(screen, status, log, fonts):
     
     # Estado del Puente
     status_text = status.get('bridge_status', 'DESCONOCIDO')
-    status_color = (100, 255, 100) if status_text == 'FREE' else (255, 150, 50)
+    status_color = (100, 255, 100) if status_text == 'LIBRE' else (255, 150, 50)
     text_surf = fonts['large'].render(f"Puente: {status_text}", True, status_color)
     screen.blit(text_surf, (SIM_WIDTH + 20, y_pos)); y_pos += 35
     

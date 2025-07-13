@@ -28,7 +28,7 @@ def notificar_a_todos():
             light_status = direccion_actual
         
         estado = {
-            "bridge_status": "OCCUPIED" if puente_ocupado else "FREE",
+            "bridge_status": "OCUPADO" if puente_ocupado else "LIBRE",
             "current_direction": direccion_actual,
             "waiting_north": len(cola_espera["NORTH"]),
             "waiting_south": len(cola_espera["SOUTH"]),
