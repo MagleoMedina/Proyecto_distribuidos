@@ -5,7 +5,6 @@ import time
 
 # --- Estado Compartido del Puente ---
 # Esta sección debe ser segura para hilos (thread-safe)
-#bridge_lock = threading.Lock()
 bridge_lock = threading.RLock()
 puente_ocupado = False
 direccion_actual = None

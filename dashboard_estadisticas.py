@@ -2,10 +2,19 @@ import customtkinter as ctk
 import socket
 import threading
 import json
+import pygame
 
 class Dashboard(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+             # --- Reproducir música al iniciar ---
+        pygame.mixer.init()
+        try:
+            pygame.mixer.music.load("assets/Dummy! - Toby Fox.mp3")
+            pygame.mixer.music.play(-1)  # Repetir indefinidamente
+        except Exception as e:
+            print(f"Error al reproducir música: {e}")
 
         # --- Configuración de la Ventana ---
         self.title("Dashboard de Estadísticas del Puente")
