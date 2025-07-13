@@ -7,6 +7,7 @@ import time
 import customtkinter as ctk
 import json
 from collections import deque
+import textwrap
 
 # --- Constantes de Configuración de Pygame ---
 SIM_WIDTH, PANEL_WIDTH = 900, 350
@@ -302,7 +303,7 @@ def draw_traffic_lights(screen, status):
     pygame.draw.circle(screen, south_light_color, (BRIDGE_END_X + 25, BRIDGE_Y_CENTER + 20), 10)
 
 def draw_stats_panel(screen, status, log, fonts):
-    """Dibuja el panel de estadísticas en el lado derecho."""
+    """Dibuja el panel de estadísticas en el lado derecho con log responsivo."""
     panel_rect = pygame.Rect(SIM_WIDTH, 0, PANEL_WIDTH, SCREEN_HEIGHT)
     pygame.draw.rect(screen, PANEL_BG_COLOR, panel_rect)
     
@@ -338,13 +339,30 @@ def draw_stats_panel(screen, status, log, fonts):
     if waiting_s > 0: pygame.draw.rect(screen, PROGRESS_BAR_FG, (SIM_WIDTH + 20, y_pos, min(PANEL_WIDTH-40, waiting_s * 20), 10))
     y_pos += 45
     
-    # Log de Eventos
+    # Log de Eventos responsivo
     log_title = fonts['large'].render("Registro de Eventos", True, WHITE)
     screen.blit(log_title, (SIM_WIDTH + 20, y_pos)); y_pos += 30
+
+    max_log_width = PANEL_WIDTH - 40
     for entry in log:
-        log_surf = fonts['small'].render(entry, True, GRAY)
-        screen.blit(log_surf, (SIM_WIDTH + 20, y_pos))
-        y_pos += 20
+        # Wrap manual usando el ancho máximo y el font
+        wrapped_lines = []
+        words = entry.split(' ')
+        line = ""
+        for word in words:
+            test_line = line + (" " if line else "") + word
+            test_surf = fonts['small'].render(test_line, True, GRAY)
+            if test_surf.get_width() > max_log_width and line:
+                wrapped_lines.append(line)
+                line = word
+            else:
+                line = test_line
+        if line:
+            wrapped_lines.append(line)
+        for wline in wrapped_lines:
+            log_surf = fonts['small'].render(wline, True, GRAY)
+            screen.blit(log_surf, (SIM_WIDTH + 20, y_pos))
+            y_pos += 20
 
 
 def main():
