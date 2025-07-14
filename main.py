@@ -23,6 +23,10 @@ class SimulacionManager:
             p.terminate()
         print("Todos los procesos han sido terminados.")
 
+    def close_window(self):
+        """Cierra todos los procesos de la simulación (incluye la ventana de interfaz)."""
+        self.terminar_procesos()
+
     def run(self):
         self.iniciar_procesos()
         try:

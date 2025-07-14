@@ -95,25 +95,17 @@ class MenuApp(ctk.CTk):
 
     def cerrar_todo(self):
         """Termina el proceso de simulación y cierra la ventana del menú."""
-        if self.simulacion_proc and self.simulacion_proc.poll() is None:
-            self.simulacion_proc.terminate()
+        if hasattr(self, "simulacion_manager"):
             try:
-                # Espera un poco para que el proceso termine de forma segura
-                self.simulacion_proc.wait(timeout=5)
+                self.simulacion_manager.close_window()
                 self.status_label.configure(text="Simulación cerrada.", text_color="gray60")
-            except subprocess.TimeoutExpired:
-                # Si no termina, lo fuerza
-                self.simulacion_proc.kill()
-                self.status_label.configure(text="Simulación forzada a cerrar.", text_color="orange")
-            
-            self.simulacion_proc = None
+            except Exception as e:
+                self.status_label.configure(text=f"Error al cerrar la simulación: {e}", text_color="#dc3545")
         else:
             self.status_label.configure(text="No había una simulación activa para cerrar.", text_color="gray60")
 
         self.start_btn.configure(state="normal")
         self.close_btn.configure(state="disabled")
-        
-        # Cierra la ventana del menú después de un breve retraso
         self.after(500, self.destroy)
 
 # --- PUNTO DE ENTRADA DE LA APLICACIÓN ---
