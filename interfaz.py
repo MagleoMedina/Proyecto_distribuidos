@@ -304,26 +304,36 @@ def abrir_formulario_modificar_carro(lista_carros, lock):
 
         # Velocidad modificable (formateada a 2 decimales)
         ctk.CTkLabel(frame, text="Velocidad:", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
-        velocidad_var = ctk.DoubleVar(value=round(carro.original_speed, 2))
-        velocidad_entry = ctk.CTkEntry(frame, textvariable=velocidad_var)
+        velocidad_entry = ctk.CTkEntry(frame)
+        velocidad_entry.insert(0, f"{round(carro.original_speed, 2)}")
         velocidad_entry.pack(anchor="w", padx=10, pady=2)
 
         # Descanso modificable (formateada a 2 decimales)
         ctk.CTkLabel(frame, text="Descanso (s):", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
-        descanso_var = ctk.DoubleVar(value=round(carro.delay_time, 2))
-        descanso_entry = ctk.CTkEntry(frame, textvariable=descanso_var)
+        descanso_entry = ctk.CTkEntry(frame)
+        descanso_entry.insert(0, f"{round(carro.delay_time, 2)}")
         descanso_entry.pack(anchor="w", padx=10, pady=2)
 
         ctk.CTkLabel(frame, text=f"Estado actual: {carro.state}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=10)
 
         def guardar_config():
             try:
-                new_speed = round(float(velocidad_var.get()), 2)
-                new_delay = round(float(descanso_var.get()), 2)
+                speed_raw = velocidad_entry.get()
+                delay_raw = descanso_entry.get()
+                if speed_raw == "" or delay_raw == "":
+                    tkmsg.showerror("Error", "Debes ingresar valores numéricos en ambos campos.")
+                    return
+                new_speed = round(float(speed_raw), 2)
+                new_delay = round(float(delay_raw), 2)
+                if new_speed == 0 or new_delay == 0:
+                    tkmsg.showerror("Error", "La velocidad y el tiempo de descanso no pueden ser 0.")
+                    return
                 with lock:
                     carro.original_speed = new_speed
                     carro.delay_time = new_delay
                 tkmsg.showinfo("Guardado", "Configuración guardada correctamente.")
+            except ValueError:
+                tkmsg.showerror("Error", "Debes ingresar valores numéricos en ambos campos.")
             except Exception as e:
                 tkmsg.showerror("Error", f"Error al guardar: {e}")
 
