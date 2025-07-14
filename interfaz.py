@@ -275,7 +275,8 @@ def abrir_formulario_agregar_carro(lista_carros, lock):
     app.mainloop()
 
 def abrir_formulario_modificar_carro(lista_carros, lock):
-    """Ventana para mostrar IDs de vehículos y ver detalles al seleccionarlos."""
+    import tkinter.messagebox as tkmsg
+
     app = ctk.CTk()
     app.title("Modificar Vehículo")
     app.geometry("350x400")
@@ -284,7 +285,6 @@ def abrir_formulario_modificar_carro(lista_carros, lock):
     frame.pack(pady=20, padx=20, fill="both", expand=True)
 
     def mostrar_lista_ids():
-        # Limpiar frame
         for widget in frame.winfo_children():
             widget.destroy()
         ctk.CTkLabel(frame, text="Selecciona un ID de Carro:", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
@@ -301,11 +301,56 @@ def abrir_formulario_modificar_carro(lista_carros, lock):
             widget.destroy()
         ctk.CTkLabel(frame, text=f"Estadísticas del Carro ID: {carro.id}", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
         ctk.CTkLabel(frame, text=f"Dirección: {carro.direction}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
-        ctk.CTkLabel(frame, text=f"Velocidad: {carro.original_speed:.1f}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
-        ctk.CTkLabel(frame, text=f"Descanso: {carro.delay_time:.1f} s", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
-        ctk.CTkLabel(frame, text=f"Estado actual: {carro.state}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
-        ctk.CTkButton(frame, text="Atrás", command=mostrar_lista_ids).pack(pady=15)
-        ctk.CTkButton(frame, text="Cerrar", command=app.destroy).pack(pady=5)
+
+        # Velocidad modificable (formateada a 2 decimales)
+        ctk.CTkLabel(frame, text="Velocidad:", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
+        velocidad_var = ctk.DoubleVar(value=round(carro.original_speed, 2))
+        velocidad_entry = ctk.CTkEntry(frame, textvariable=velocidad_var)
+        velocidad_entry.pack(anchor="w", padx=10, pady=2)
+
+        # Descanso modificable (formateada a 2 decimales)
+        ctk.CTkLabel(frame, text="Descanso (s):", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
+        descanso_var = ctk.DoubleVar(value=round(carro.delay_time, 2))
+        descanso_entry = ctk.CTkEntry(frame, textvariable=descanso_var)
+        descanso_entry.pack(anchor="w", padx=10, pady=2)
+
+        ctk.CTkLabel(frame, text=f"Estado actual: {carro.state}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=10)
+
+        def guardar_config():
+            try:
+                new_speed = round(float(velocidad_var.get()), 2)
+                new_delay = round(float(descanso_var.get()), 2)
+                with lock:
+                    carro.original_speed = new_speed
+                    carro.delay_time = new_delay
+                tkmsg.showinfo("Guardado", "Configuración guardada correctamente.")
+            except Exception as e:
+                tkmsg.showerror("Error", f"Error al guardar: {e}")
+
+        def eliminar_carro():
+            with lock:
+                if carro.state == "WAITING":
+                    lista_carros.remove(carro)
+                    tkmsg.showinfo("Eliminado", f"Carro ID {carro.id} eliminado.")
+                    mostrar_lista_ids()
+                else:
+                    tkmsg.showinfo("Pendiente", "El carro será eliminado cuando haya cruzado el puente.")
+                    # Marcar para eliminar cuando esté IDLE
+                    carro._pending_delete = True
+                    mostrar_lista_ids()
+
+        ctk.CTkButton(frame, text="Guardar", command=guardar_config).pack(pady=8)
+        ctk.CTkButton(frame, text="Eliminar Vehículo", fg_color="#dc3545", hover_color="#c82333", command=eliminar_carro).pack(pady=8)
+        ctk.CTkButton(frame, text="Atrás", command=mostrar_lista_ids).pack(pady=8)
+
+    # Hook para eliminar carros marcados cuando estén IDLE
+    def eliminar_pendientes():
+        with lock:
+            for carro in list(lista_carros):
+                if hasattr(carro, "_pending_delete") and carro._pending_delete and carro.state == "IDLE":
+                    lista_carros.remove(carro)
+        app.after(1000, eliminar_pendientes)
+    eliminar_pendientes()
 
     mostrar_lista_ids()
     app.mainloop()
