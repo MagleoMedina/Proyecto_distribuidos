@@ -8,6 +8,7 @@ import customtkinter as ctk
 import json
 from collections import deque
 import textwrap
+from PIL import Image  # Agrega PIL para cargar los iconos
 
 # --- Constantes de Configuración de Pygame ---
 SIM_WIDTH, PANEL_WIDTH = 900, 350
@@ -442,13 +443,26 @@ def main():
         'small': pygame.font.SysFont("Consolas", 12),
     }
 
-    # --- Inicializar y reproducir música solo una vez ---
+    # --- Inicializar y cargar música solo una vez ---
     pygame.mixer.init()
+    music_loaded = False
     try:
         pygame.mixer.music.load("assets/Undertale.mp3")
-        pygame.mixer.music.play(-1)  # Repetir indefinidamente
+        # No reproducir música automáticamente al iniciar
+        # pygame.mixer.music.play(-1)  # Elimina esta línea
+        music_loaded = True
     except Exception as e:
         print(f"Error al reproducir música: {e}")
+
+    # --- Cargar iconos para los botones de música ---
+    try:
+        start_icon_img = pygame.image.load("assets/start_icon.png")
+        stop_icon_img = pygame.image.load("assets/stop_icon.png")
+        start_icon_img = pygame.transform.scale(start_icon_img, (32, 32))
+        stop_icon_img = pygame.transform.scale(stop_icon_img, (32, 32))
+    except Exception:
+        start_icon_img = None
+        stop_icon_img = None
 
     # Iniciar hilo para escuchar al servidor
     network_thread = threading.Thread(target=listen_for_server_updates, daemon=True); network_thread.start()
@@ -462,6 +476,12 @@ def main():
 
     add_button_rect = pygame.Rect(SIM_WIDTH - 160, 10, 150, 40)
     modify_button_rect = pygame.Rect(SIM_WIDTH - 160, 60, 150, 40)
+    # --- Mueve los botones de música a la esquina inferior izquierda ---
+    music_start_btn_rect = pygame.Rect(20, SCREEN_HEIGHT - 60, 50, 40)
+    music_stop_btn_rect = pygame.Rect(80, SCREEN_HEIGHT - 60, 50, 40)
+
+    music_playing = False  # Estado de la música
+    music_paused_pos = 0   # Posición en milisegundos donde se pausó
 
     ADD_BTN_COLOR = BUTTON_COLOR
     ADD_BTN_HOVER = (130, 130, 255)
@@ -473,9 +493,13 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
         mouse_over_add = add_button_rect.collidepoint(mouse_pos)
         mouse_over_modify = modify_button_rect.collidepoint(mouse_pos)
+        mouse_over_music_start = music_start_btn_rect.collidepoint(mouse_pos)
+        mouse_over_music_stop = music_stop_btn_rect.collidepoint(mouse_pos)
 
-        # Cambiar cursor si está sobre los botones
-        if mouse_over_add or mouse_over_modify:
+        # Cambiar cursor si está sobre los botones habilitados
+        if (mouse_over_add or mouse_over_modify or
+            (mouse_over_music_start and not music_playing) or
+            (mouse_over_music_stop and music_playing)):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -489,6 +513,18 @@ def main():
                 if modify_button_rect.collidepoint(event.pos):
                     form_thread = threading.Thread(target=abrir_formulario_modificar_carro, args=(carros, carros_lock), daemon=True)
                     form_thread.start()
+                # Solo permite click si el botón está habilitado
+                if music_start_btn_rect.collidepoint(event.pos) and not music_playing:
+                    if music_loaded:
+                        # Reanudar desde la posición pausada
+                        # pygame.mixer.music.play(-1)  # Elimina esta línea
+                        pygame.mixer.music.play(-1, start=music_paused_pos / 1000.0)
+                        music_playing = True
+                if music_stop_btn_rect.collidepoint(event.pos) and music_playing:
+                    # Guardar posición actual antes de detener
+                    music_paused_pos = pygame.mixer.music.get_pos()
+                    pygame.mixer.music.stop()
+                    music_playing = False
 
         # --- Lógica de Dibujo ---
         draw_scenery(screen)
@@ -507,11 +543,41 @@ def main():
         screen.blit(add_text, (add_button_rect.x + (add_button_rect.width - add_text.get_width()) / 2, 
                                add_button_rect.y + (add_button_rect.height - add_text.get_height()) / 2))
 
-        # Dibujar botón "Modificar" con hover
+        # Dibujar botón "Modificar" with hover
         pygame.draw.rect(screen, MODIFY_BTN_HOVER if mouse_over_modify else MODIFY_BTN_COLOR, modify_button_rect)
         modify_text = fonts['button'].render("Modificar", True, BUTTON_TEXT_COLOR)
         screen.blit(modify_text, (modify_button_rect.x + (modify_button_rect.width - modify_text.get_width()) / 2,
                                   modify_button_rect.y + (modify_button_rect.height - modify_text.get_height()) / 2))
+
+        # --- Dibujar botones de música en la esquina inferior izquierda ---
+        # Deshabilitado: color más oscuro y texto "deshabilitado"
+        start_btn_color = (70, 180, 70) if (mouse_over_music_start and not music_playing) else (100, 220, 100)
+        stop_btn_color = (180, 70, 70) if (mouse_over_music_stop and music_playing) else (220, 100, 100)
+        if music_playing:
+            start_btn_alpha = 120  # Deshabilitado
+            stop_btn_alpha = 255
+        else:
+            start_btn_alpha = 255
+            stop_btn_alpha = 120  # Deshabilitado
+
+        # Crear superficies con alpha para simular deshabilitado
+        start_btn_surface = pygame.Surface((music_start_btn_rect.width, music_start_btn_rect.height), pygame.SRCALPHA)
+        stop_btn_surface = pygame.Surface((music_stop_btn_rect.width, music_stop_btn_rect.height), pygame.SRCALPHA)
+        start_btn_surface.fill((*start_btn_color, start_btn_alpha))
+        stop_btn_surface.fill((*stop_btn_color, stop_btn_alpha))
+        screen.blit(start_btn_surface, (music_start_btn_rect.x, music_start_btn_rect.y))
+        screen.blit(stop_btn_surface, (music_stop_btn_rect.x, music_stop_btn_rect.y))
+
+        if start_icon_img:
+            screen.blit(start_icon_img, (music_start_btn_rect.x + 9, music_start_btn_rect.y + 4))
+        else:
+            start_text = fonts['button'].render("Play", True, WHITE if not music_playing else GRAY)
+            screen.blit(start_text, (music_start_btn_rect.x + 5, music_start_btn_rect.y + 8))
+        if stop_icon_img:
+            screen.blit(stop_icon_img, (music_stop_btn_rect.x + 9, music_stop_btn_rect.y + 4))
+        else:
+            stop_text = fonts['button'].render("Stop", True, WHITE if music_playing else GRAY)
+            screen.blit(stop_text, (music_stop_btn_rect.x + 5, music_stop_btn_rect.y + 8))
 
         with carros_lock:
             for carro in list(carros):
