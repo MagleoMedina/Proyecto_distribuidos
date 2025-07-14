@@ -337,24 +337,8 @@ def abrir_formulario_modificar_carro(lista_carros, lock):
             except Exception as e:
                 tkmsg.showerror("Error", f"Error al guardar: {e}")
 
-        def eliminar_carro():
-            with lock:
-                lista_carros.remove(carro)
-            tkmsg.showinfo("Eliminado", f"Carro ID {carro.id} eliminado.")
-            mostrar_lista_ids()
-
         ctk.CTkButton(frame, text="Guardar", command=guardar_config).pack(pady=8)
-        ctk.CTkButton(frame, text="Eliminar Vehículo", fg_color="#dc3545", hover_color="#c82333", command=eliminar_carro).pack(pady=8)
         ctk.CTkButton(frame, text="Atrás", command=mostrar_lista_ids).pack(pady=8)
-
-    # Hook para eliminar carros marcados cuando estén IDLE
-    def eliminar_pendientes():
-        with lock:
-            for carro in list(lista_carros):
-                if hasattr(carro, "_pending_delete") and carro._pending_delete and carro.state == "IDLE":
-                    lista_carros.remove(carro)
-        app.after(1000, eliminar_pendientes)
-    eliminar_pendientes()
 
     mostrar_lista_ids()
     app.mainloop()
