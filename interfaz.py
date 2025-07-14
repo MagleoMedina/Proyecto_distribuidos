@@ -57,14 +57,6 @@ class Carro:
         self.rect = pygame.Rect(self.start_pos_x, self.original_y, CAR_WIDTH, CAR_HEIGHT)
         self.state = 'IDLE'
 
-        # --- Reproducir música al iniciar ---
-        pygame.mixer.init()
-        try:
-            pygame.mixer.music.load("assets/Undertale.mp3")
-            pygame.mixer.music.play(-1)  # Repetir indefinidamente
-        except Exception as e:
-            print(f"Error al reproducir música: {e}")
-
     def reset_position_and_direction(self):
         self.direction = 'SOUTH' if self.direction == 'NORTH' else 'NORTH'
         self.original_y = (BRIDGE_Y_CENTER - BRIDGE_HEIGHT / 4 - CAR_HEIGHT) if self.direction == 'NORTH' else (BRIDGE_Y_CENTER + BRIDGE_HEIGHT / 4)
@@ -448,6 +440,14 @@ def main():
         'medium': pygame.font.SysFont("Arial", 16),
         'small': pygame.font.SysFont("Consolas", 12),
     }
+
+    # --- Inicializar y reproducir música solo una vez ---
+    pygame.mixer.init()
+    try:
+        pygame.mixer.music.load("assets/Undertale.mp3")
+        pygame.mixer.music.play(-1)  # Repetir indefinidamente
+    except Exception as e:
+        print(f"Error al reproducir música: {e}")
 
     # Iniciar hilo para escuchar al servidor
     network_thread = threading.Thread(target=listen_for_server_updates, daemon=True); network_thread.start()
