@@ -274,6 +274,28 @@ def abrir_formulario_agregar_carro(lista_carros, lock):
     ctk.CTkButton(app, text="Confirmar", command=procesar_nuevo_carro).pack(pady=20)
     app.mainloop()
 
+def abrir_formulario_modificar_carro(lista_carros, lock):
+    """Ventana para mostrar y seleccionar vehículos para modificar."""
+    app = ctk.CTk()
+    app.title("Modificar Vehículo")
+    app.geometry("400x400")
+
+    frame = ctk.CTkFrame(app)
+    frame.pack(pady=20, padx=20, fill="both", expand=True)
+
+    ctk.CTkLabel(frame, text="Lista de Vehículos en Simulación:", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
+
+    with lock:
+        carros_actuales = list(lista_carros)
+
+    # Mostrar lista de vehículos
+    for carro in carros_actuales:
+        info = f"ID: {carro.id} | Dirección: {carro.direction} | Velocidad: {carro.original_speed:.1f} | Descanso: {carro.delay_time:.1f}s"
+        ctk.CTkLabel(frame, text=info, anchor="w", font=ctk.CTkFont(size=13)).pack(fill="x", padx=5, pady=2)
+
+    ctk.CTkButton(app, text="Cerrar", command=app.destroy).pack(pady=15)
+    app.mainloop()
+
 def draw_scenery(screen):
     """Dibuja el fondo, río, líneas de carril y árboles."""
     screen.fill(GRASS_COLOR)
@@ -390,7 +412,8 @@ def main():
         thread = threading.Thread(target=carro_lifecycle, args=(carro,), daemon=True); thread.start()
 
     add_button_rect = pygame.Rect(SIM_WIDTH - 160, 10, 150, 40)
-    
+    modify_button_rect = pygame.Rect(SIM_WIDTH - 160, 60, 150, 40)  # Nuevo botón debajo del de agregar
+
     running = True
     while running:
         for event in pygame.event.get():
@@ -398,6 +421,9 @@ def main():
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if add_button_rect.collidepoint(event.pos):
                     form_thread = threading.Thread(target=abrir_formulario_agregar_carro, args=(carros, carros_lock), daemon=True)
+                    form_thread.start()
+                if modify_button_rect.collidepoint(event.pos):
+                    form_thread = threading.Thread(target=abrir_formulario_modificar_carro, args=(carros, carros_lock), daemon=True)
                     form_thread.start()
 
         # --- Lógica de Dibujo ---
@@ -416,6 +442,12 @@ def main():
         add_text = fonts['button'].render("Agregar Carro", True, BUTTON_TEXT_COLOR)
         screen.blit(add_text, (add_button_rect.x + (add_button_rect.width - add_text.get_width()) / 2, 
                                add_button_rect.y + (add_button_rect.height - add_text.get_height()) / 2))
+
+        # Dibujar botón "Modificar"
+        pygame.draw.rect(screen, BUTTON_COLOR, modify_button_rect)
+        modify_text = fonts['button'].render("Modificar", True, BUTTON_TEXT_COLOR)
+        screen.blit(modify_text, (modify_button_rect.x + (modify_button_rect.width - modify_text.get_width()) / 2,
+                                  modify_button_rect.y + (modify_button_rect.height - modify_text.get_height()) / 2))
 
         with carros_lock:
             for carro in list(carros):
