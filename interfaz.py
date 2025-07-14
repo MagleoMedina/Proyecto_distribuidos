@@ -275,25 +275,39 @@ def abrir_formulario_agregar_carro(lista_carros, lock):
     app.mainloop()
 
 def abrir_formulario_modificar_carro(lista_carros, lock):
-    """Ventana para mostrar y seleccionar vehículos para modificar."""
+    """Ventana para mostrar IDs de vehículos y ver detalles al seleccionarlos."""
     app = ctk.CTk()
     app.title("Modificar Vehículo")
-    app.geometry("400x400")
+    app.geometry("350x400")
 
     frame = ctk.CTkFrame(app)
     frame.pack(pady=20, padx=20, fill="both", expand=True)
 
-    ctk.CTkLabel(frame, text="Lista de Vehículos en Simulación:", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
+    def mostrar_lista_ids():
+        # Limpiar frame
+        for widget in frame.winfo_children():
+            widget.destroy()
+        ctk.CTkLabel(frame, text="Selecciona un ID de Carro:", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
+        with lock:
+            carros_actuales = list(lista_carros)
+        for carro in carros_actuales:
+            btn = ctk.CTkButton(frame, text=f"ID: {carro.id}", font=ctk.CTkFont(size=14),
+                                command=lambda c=carro: mostrar_estadisticas_carro(c))
+            btn.pack(fill="x", padx=10, pady=5)
+        ctk.CTkButton(frame, text="Cerrar", command=app.destroy).pack(pady=15)
 
-    with lock:
-        carros_actuales = list(lista_carros)
+    def mostrar_estadisticas_carro(carro):
+        for widget in frame.winfo_children():
+            widget.destroy()
+        ctk.CTkLabel(frame, text=f"Estadísticas del Carro ID: {carro.id}", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
+        ctk.CTkLabel(frame, text=f"Dirección: {carro.direction}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
+        ctk.CTkLabel(frame, text=f"Velocidad: {carro.original_speed:.1f}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
+        ctk.CTkLabel(frame, text=f"Descanso: {carro.delay_time:.1f} s", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
+        ctk.CTkLabel(frame, text=f"Estado actual: {carro.state}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
+        ctk.CTkButton(frame, text="Atrás", command=mostrar_lista_ids).pack(pady=15)
+        ctk.CTkButton(frame, text="Cerrar", command=app.destroy).pack(pady=5)
 
-    # Mostrar lista de vehículos
-    for carro in carros_actuales:
-        info = f"ID: {carro.id} | Dirección: {carro.direction} | Velocidad: {carro.original_speed:.1f} | Descanso: {carro.delay_time:.1f}s"
-        ctk.CTkLabel(frame, text=info, anchor="w", font=ctk.CTkFont(size=13)).pack(fill="x", padx=5, pady=2)
-
-    ctk.CTkButton(app, text="Cerrar", command=app.destroy).pack(pady=15)
+    mostrar_lista_ids()
     app.mainloop()
 
 def draw_scenery(screen):
@@ -412,10 +426,25 @@ def main():
         thread = threading.Thread(target=carro_lifecycle, args=(carro,), daemon=True); thread.start()
 
     add_button_rect = pygame.Rect(SIM_WIDTH - 160, 10, 150, 40)
-    modify_button_rect = pygame.Rect(SIM_WIDTH - 160, 60, 150, 40)  # Nuevo botón debajo del de agregar
+    modify_button_rect = pygame.Rect(SIM_WIDTH - 160, 60, 150, 40)
+
+    ADD_BTN_COLOR = BUTTON_COLOR
+    ADD_BTN_HOVER = (130, 130, 255)
+    MODIFY_BTN_COLOR = BUTTON_COLOR
+    MODIFY_BTN_HOVER = (130, 180, 255)
 
     running = True
     while running:
+        mouse_pos = pygame.mouse.get_pos()
+        mouse_over_add = add_button_rect.collidepoint(mouse_pos)
+        mouse_over_modify = modify_button_rect.collidepoint(mouse_pos)
+
+        # Cambiar cursor si está sobre los botones
+        if mouse_over_add or mouse_over_modify:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+        else:
+            pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT: running = False
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -437,14 +466,14 @@ def main():
         draw_traffic_lights(screen, status_copy)
         draw_stats_panel(screen, status_copy, log_copy, fonts)
         
-        # Dibujar botón "Agregar"
-        pygame.draw.rect(screen, BUTTON_COLOR, add_button_rect)
+        # Dibujar botón "Agregar" con hover
+        pygame.draw.rect(screen, ADD_BTN_HOVER if mouse_over_add else ADD_BTN_COLOR, add_button_rect)
         add_text = fonts['button'].render("Agregar Carro", True, BUTTON_TEXT_COLOR)
         screen.blit(add_text, (add_button_rect.x + (add_button_rect.width - add_text.get_width()) / 2, 
                                add_button_rect.y + (add_button_rect.height - add_text.get_height()) / 2))
 
-        # Dibujar botón "Modificar"
-        pygame.draw.rect(screen, BUTTON_COLOR, modify_button_rect)
+        # Dibujar botón "Modificar" con hover
+        pygame.draw.rect(screen, MODIFY_BTN_HOVER if mouse_over_modify else MODIFY_BTN_COLOR, modify_button_rect)
         modify_text = fonts['button'].render("Modificar", True, BUTTON_TEXT_COLOR)
         screen.blit(modify_text, (modify_button_rect.x + (modify_button_rect.width - modify_text.get_width()) / 2,
                                   modify_button_rect.y + (modify_button_rect.height - modify_text.get_height()) / 2))
