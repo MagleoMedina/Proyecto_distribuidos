@@ -453,7 +453,8 @@ def main():
     network_thread = threading.Thread(target=listen_for_server_updates, daemon=True); network_thread.start()
 
     carros = []
-    for i in range(5):
+    num_carros = random.randint(1, 7)
+    for i in range(num_carros):
         carro = Carro(i + 1, random.choice(["NORTH", "SOUTH"]), random.uniform(2, 4), random.uniform(4, 10))
         carros.append(carro)
         thread = threading.Thread(target=carro_lifecycle, args=(carro,), daemon=True); thread.start()
@@ -498,7 +499,7 @@ def main():
         
         draw_traffic_lights(screen, status_copy)
         draw_stats_panel(screen, status_copy, log_copy, fonts)
-        
+
         # Dibujar botón "Agregar" con hover
         pygame.draw.rect(screen, ADD_BTN_HOVER if mouse_over_add else ADD_BTN_COLOR, add_button_rect)
         add_text = fonts['button'].render("Agregar Carro", True, BUTTON_TEXT_COLOR)
@@ -513,8 +514,13 @@ def main():
 
         with carros_lock:
             for carro in list(carros):
-                carro.update(carros)
-                carro.draw(screen, fonts['car_id'])
+                # Evitar que los vehículos se dibujen sobre el panel lateral
+                if carro.rect.right <= SIM_WIDTH:
+                    carro.update(carros)
+                    carro.draw(screen, fonts['car_id'])
+                else:
+                    # Si el carro está fuera del área de simulación, no lo dibujes
+                    carro.update(carros)
 
         pygame.display.flip()
         clock.tick(FPS)
