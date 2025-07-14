@@ -58,12 +58,12 @@ class Carro:
         self.state = 'IDLE'
 
         # --- Reproducir música al iniciar ---
-        pygame.mixer.init()
-        try:
-            pygame.mixer.music.load("assets/Death By Glamour - Toby Fox.mp3")
-            pygame.mixer.music.play(-1)  # Repetir indefinidamente
-        except Exception as e:
-            print(f"Error al reproducir música: {e}")
+       # pygame.mixer.init()
+       # try:
+            #pygame.mixer.music.load("assets/Death By Glamour - Toby Fox.mp3")
+            #pygame.mixer.music.play(-1)  # Repetir indefinidamente
+       # except Exception as e:
+           # print(f"Error al reproducir música: {e}")
 
     def reset_position_and_direction(self):
         self.direction = 'SOUTH' if self.direction == 'NORTH' else 'NORTH'
