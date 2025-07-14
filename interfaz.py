@@ -58,12 +58,12 @@ class Carro:
         self.state = 'IDLE'
 
         # --- Reproducir música al iniciar ---
-       # pygame.mixer.init()
-       # try:
-            #pygame.mixer.music.load("assets/Death By Glamour - Toby Fox.mp3")
-            #pygame.mixer.music.play(-1)  # Repetir indefinidamente
-       # except Exception as e:
-           # print(f"Error al reproducir música: {e}")
+        pygame.mixer.init()
+        try:
+            pygame.mixer.music.load("assets/Undertale.mp3")
+            pygame.mixer.music.play(-1)  # Repetir indefinidamente
+        except Exception as e:
+            print(f"Error al reproducir música: {e}")
 
     def reset_position_and_direction(self):
         self.direction = 'SOUTH' if self.direction == 'NORTH' else 'NORTH'
@@ -339,15 +339,9 @@ def abrir_formulario_modificar_carro(lista_carros, lock):
 
         def eliminar_carro():
             with lock:
-                if carro.state == "WAITING":
-                    lista_carros.remove(carro)
-                    tkmsg.showinfo("Eliminado", f"Carro ID {carro.id} eliminado.")
-                    mostrar_lista_ids()
-                else:
-                    tkmsg.showinfo("Pendiente", "El carro será eliminado cuando haya cruzado el puente.")
-                    # Marcar para eliminar cuando esté IDLE
-                    carro._pending_delete = True
-                    mostrar_lista_ids()
+                lista_carros.remove(carro)
+            tkmsg.showinfo("Eliminado", f"Carro ID {carro.id} eliminado.")
+            mostrar_lista_ids()
 
         ctk.CTkButton(frame, text="Guardar", command=guardar_config).pack(pady=8)
         ctk.CTkButton(frame, text="Eliminar Vehículo", fg_color="#dc3545", hover_color="#c82333", command=eliminar_carro).pack(pady=8)
