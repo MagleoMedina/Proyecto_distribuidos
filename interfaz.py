@@ -273,40 +273,41 @@ def abrir_formulario_modificar_carro(lista_carros, lock):
     app.title("Modificar Vehículo")
     app.geometry("350x400")
 
-    frame = ctk.CTkFrame(app)
-    frame.pack(pady=20, padx=20, fill="both", expand=True)
+    # --- Usar CTkScrollableFrame en vez de CTkFrame ---
+    scroll_frame = ctk.CTkScrollableFrame(app)
+    scroll_frame.pack(pady=20, padx=20, fill="both", expand=True)
 
     def mostrar_lista_ids():
-        for widget in frame.winfo_children():
+        for widget in scroll_frame.winfo_children():
             widget.destroy()
-        ctk.CTkLabel(frame, text="Selecciona un ID de Carro:", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
+        ctk.CTkLabel(scroll_frame, text="Selecciona un ID de Carro:", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
         with lock:
             carros_actuales = list(lista_carros)
         for carro in carros_actuales:
-            btn = ctk.CTkButton(frame, text=f"ID: {carro.id}", font=ctk.CTkFont(size=14),
+            btn = ctk.CTkButton(scroll_frame, text=f"ID: {carro.id}", font=ctk.CTkFont(size=14),
                                 command=lambda c=carro: mostrar_estadisticas_carro(c))
             btn.pack(fill="x", padx=10, pady=5)
-        ctk.CTkButton(frame, text="Cerrar", command=app.destroy).pack(pady=15)
+        ctk.CTkButton(scroll_frame, text="Cerrar", command=app.destroy).pack(pady=15)
 
     def mostrar_estadisticas_carro(carro):
-        for widget in frame.winfo_children():
+        for widget in scroll_frame.winfo_children():
             widget.destroy()
-        ctk.CTkLabel(frame, text=f"Estadísticas del Carro ID: {carro.id}", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
-        ctk.CTkLabel(frame, text=f"Dirección: {carro.direction}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
+        ctk.CTkLabel(scroll_frame, text=f"Estadísticas del Carro ID: {carro.id}", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
+        ctk.CTkLabel(scroll_frame, text=f"Dirección: {carro.direction}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
 
         # Velocidad modificable (formateada a 2 decimales)
-        ctk.CTkLabel(frame, text="Velocidad:", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
-        velocidad_entry = ctk.CTkEntry(frame)
+        ctk.CTkLabel(scroll_frame, text="Velocidad:", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
+        velocidad_entry = ctk.CTkEntry(scroll_frame)
         velocidad_entry.insert(0, f"{round(carro.original_speed, 2)}")
         velocidad_entry.pack(anchor="w", padx=10, pady=2)
 
         # Descanso modificable (formateada a 2 decimales)
-        ctk.CTkLabel(frame, text="Descanso (s):", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
-        descanso_entry = ctk.CTkEntry(frame)
+        ctk.CTkLabel(scroll_frame, text="Descanso (s):", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
+        descanso_entry = ctk.CTkEntry(scroll_frame)
         descanso_entry.insert(0, f"{round(carro.delay_time, 2)}")
         descanso_entry.pack(anchor="w", padx=10, pady=2)
 
-        ctk.CTkLabel(frame, text=f"Estado actual: {carro.state}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=10)
+        ctk.CTkLabel(scroll_frame, text=f"Estado actual: {carro.state}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=10)
 
         def guardar_config():
             try:
@@ -329,8 +330,8 @@ def abrir_formulario_modificar_carro(lista_carros, lock):
             except Exception as e:
                 tkmsg.showerror("Error", f"Error al guardar: {e}")
 
-        ctk.CTkButton(frame, text="Guardar", command=guardar_config).pack(pady=8)
-        ctk.CTkButton(frame, text="Atrás", command=mostrar_lista_ids).pack(pady=8)
+        ctk.CTkButton(scroll_frame, text="Guardar", command=guardar_config).pack(pady=8)
+        ctk.CTkButton(scroll_frame, text="Atrás", command=mostrar_lista_ids).pack(pady=8)
 
     mostrar_lista_ids()
     app.mainloop()
