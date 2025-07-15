@@ -30,7 +30,7 @@ Instala las dependencias con:
 pip install pygame customtkinter Pillow
 ```
 
-o tambien puede ejecutar:
+o también puede ejecutar:
 
 ```bash
 pip install -r requeriments.txt
