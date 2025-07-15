@@ -7,6 +7,7 @@ class SimulacionManager:
         self.procesos = []
 
     def iniciar_procesos(self):
+        """Inicia los procesos del servidor y del visualizador de la simulación."""
         print("Iniciando el servidor...")
         servidor_proceso = subprocess.Popen([sys.executable, "servidor.py"])
         self.procesos.append(servidor_proceso)
@@ -18,6 +19,7 @@ class SimulacionManager:
         print("\nSimulación en marcha. Cierra esta ventana para terminar todos los procesos.")
 
     def terminar_procesos(self):
+        """Termina todos los procesos de la simulación."""
         print("\nTerminando la simulación...")
         for p in self.procesos:
             p.terminate()
@@ -28,6 +30,7 @@ class SimulacionManager:
         self.terminar_procesos()
 
     def run(self):
+        """Inicia la simulación y monitorea los procesos."""
         self.iniciar_procesos()
         try:
             while True:

@@ -1,18 +1,16 @@
 import customtkinter as ctk
-import subprocess
 import sys
 import os
 from PIL import Image
 import main
 import threading
 
-# --- CLASE PRINCIPAL DE LA APLICACIÓN DEL MENÚ ---
 class MenuApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         # --- CONFIGURACIÓN DE LA VENTANA PRINCIPAL ---
-        self.title("Menú Principal - Simulador de Puente")
+        self.title("Menú Principal")
         self.geometry("550x450")
         self.resizable(False, False)
         ctk.set_appearance_mode("dark")
@@ -108,7 +106,7 @@ class MenuApp(ctk.CTk):
         self.close_btn.configure(state="disabled")
         self.after(500, self.destroy)
 
-# --- PUNTO DE ENTRADA DE LA APLICACIÓN ---
+
 if __name__ == "__main__":
     # Comprobar si Pillow está instalado
     try:

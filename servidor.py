@@ -12,7 +12,7 @@ cola_espera = {"NORTH": [], "SOUTH": []}
 clientes_conectados = []
 coches_en_puente = 0
 carros_cruzando = []
-event_log = deque(maxlen=10) # Log para los últimos 10 eventos
+event_log = deque(maxlen=10) 
 
 def log_event(text):
     """Añade un evento al log con marca de tiempo."""
@@ -121,9 +121,7 @@ def handle_client(client_socket, client_address):
             elif comando == "RELEASE_BRIDGE":
                 car_id_released = -1
                 with bridge_lock:
-                    # Intenta encontrar qué carro se fue
-                    # Esta lógica es simple y asume que el que libera es uno de los que cruzaba.
-                    # Para una lógica perfecta se requeriría enviar el ID en el RELEASE.
+
                     if carros_cruzando: car_id_released = carros_cruzando[0]
 
                     coches_en_puente -= 1
