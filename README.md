@@ -27,6 +27,12 @@ Este proyecto simula la gestión de tráfico en un puente de una sola vía, util
 Instala las dependencias con:
 
 ```bash
+pip install pygame customtkinter Pillow
+```
+
+o tambien puede ejecutar:
+
+```bash
 pip install -r requeriments.txt
 ```
 
