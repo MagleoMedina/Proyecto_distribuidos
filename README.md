@@ -33,7 +33,7 @@ pip install pygame customtkinter Pillow
 o también puede ejecutar:
 
 ```bash
-pip install -r requeriments.txt
+pip install -r requirements.txt
 ```
 
 ## Uso
