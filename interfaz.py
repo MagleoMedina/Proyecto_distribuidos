@@ -2,12 +2,11 @@ import pygame
 import socket
 import threading
 import random
-import sys
 import time
 import customtkinter as ctk
 import json
 from collections import deque
-import textwrap
+
 
 # --- Constantes de Configuración de Pygame ---
 SIM_WIDTH, PANEL_WIDTH = 900, 350
@@ -49,29 +48,21 @@ class Carro:
         self.speed = self.original_speed
         y_pos = (BRIDGE_Y_CENTER - BRIDGE_HEIGHT / 4 - CAR_HEIGHT) if direction == 'NORTH' else (BRIDGE_Y_CENTER + BRIDGE_HEIGHT / 4)
         self.original_y = y_pos
-        
-        # --- LÍNEA A CORREGIR ---
-        # La posición inicial de los carros del SUR debe ajustarse por su propio ancho.
+
         self.start_pos_x = -CAR_WIDTH if direction == 'NORTH' else (SIM_WIDTH - CAR_WIDTH)
         
         self.rect = pygame.Rect(self.start_pos_x, self.original_y, CAR_WIDTH, CAR_HEIGHT)
         self.state = 'IDLE'
 
-        # --- Reproducir música al iniciar ---
-        pygame.mixer.init()
-        try:
-            pygame.mixer.music.load("assets/Undertale.mp3")
-            pygame.mixer.music.play(-1)  # Repetir indefinidamente
-        except Exception as e:
-            print(f"Error al reproducir música: {e}")
-
     def reset_position_and_direction(self):
+        """Resetea la posición y dirección del carro después de cruzar el puente."""
         self.direction = 'SOUTH' if self.direction == 'NORTH' else 'NORTH'
         self.original_y = (BRIDGE_Y_CENTER - BRIDGE_HEIGHT / 4 - CAR_HEIGHT) if self.direction == 'NORTH' else (BRIDGE_Y_CENTER + BRIDGE_HEIGHT / 4)
         self.start_pos_x = -CAR_WIDTH if self.direction == 'NORTH' else SIM_WIDTH
         self.rect.x, self.rect.y = self.start_pos_x, self.original_y
 
     def update(self, all_cars):
+        """Actualiza la posición y estado del carro según su lógica de movimiento."""
         self.speed = self.original_speed
         # --- Lógica de la cola de espera ---
         if self.state in ['DRIVING_TO_BRIDGE', 'WAITING']:
@@ -95,7 +86,7 @@ class Carro:
                         self.rect.x = SIM_WIDTH - CAR_WIDTH
                 else:
                     self.rect.x, self.state = target_x, 'WAITING'
-            else: # SOUTH
+            else: 
                 target_x = (front_car.rect.right + QUEUE_GAP) if front_car else (BRIDGE_END_X + 20)
                 if self.rect.x > target_x:
                     self.rect.x -= self.speed
@@ -125,7 +116,6 @@ class Carro:
         elif self.state == 'RETURNING':
             self.rect.y = self.original_y
             if self.direction == 'NORTH':
-                # --- LÍNEA CORREGIDA ---
                 # Se elimina "+ CAR_WIDTH" para que el carro desaparezca justo en el borde.
                 if self.rect.x < SIM_WIDTH: 
                     self.rect.x += self.speed
@@ -139,6 +129,7 @@ class Carro:
                     self.state = 'IDLE'
 
     def draw(self, screen, font):
+        """Dibuja el carro en la pantalla."""
         pygame.draw.rect(screen, self.color, self.rect)
         id_render = font.render(str(self.id), True, BLACK)
         screen.blit(id_render, (self.rect.centerx - id_render.get_width() / 2, self.rect.centery - id_render.get_height() / 2))
@@ -150,7 +141,6 @@ class Carro:
             else: # Yendo a la izquierda
                 brake_rect = pygame.Rect(self.rect.right, self.rect.centery - 2, 3, 4)
             pygame.draw.rect(screen, RED_LIGHT, brake_rect)
-
 
 def carro_lifecycle(carro: Carro):
     """Ciclo de vida y lógica de red para un carro."""
@@ -275,48 +265,51 @@ def abrir_formulario_agregar_carro(lista_carros, lock):
     app.mainloop()
 
 def abrir_formulario_modificar_carro(lista_carros, lock):
+    """Formulario de customtkinter para modificar un carro existente."""
     import tkinter.messagebox as tkmsg
 
     app = ctk.CTk()
     app.title("Modificar Vehículo")
     app.geometry("350x400")
-
-    frame = ctk.CTkFrame(app)
-    frame.pack(pady=20, padx=20, fill="both", expand=True)
+    scroll_frame = ctk.CTkScrollableFrame(app)
+    scroll_frame.pack(pady=20, padx=20, fill="both", expand=True)
 
     def mostrar_lista_ids():
-        for widget in frame.winfo_children():
+        """Muestra la lista de IDs de carros en el formulario."""
+        for widget in scroll_frame.winfo_children():
             widget.destroy()
-        ctk.CTkLabel(frame, text="Selecciona un ID de Carro:", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
+        ctk.CTkLabel(scroll_frame, text="Selecciona un ID de Carro:", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
         with lock:
             carros_actuales = list(lista_carros)
         for carro in carros_actuales:
-            btn = ctk.CTkButton(frame, text=f"ID: {carro.id}", font=ctk.CTkFont(size=14),
+            btn = ctk.CTkButton(scroll_frame, text=f"ID: {carro.id}", font=ctk.CTkFont(size=14),
                                 command=lambda c=carro: mostrar_estadisticas_carro(c))
             btn.pack(fill="x", padx=10, pady=5)
-        ctk.CTkButton(frame, text="Cerrar", command=app.destroy).pack(pady=15)
+        ctk.CTkButton(scroll_frame, text="Cerrar", command=app.destroy).pack(pady=15)
 
     def mostrar_estadisticas_carro(carro):
-        for widget in frame.winfo_children():
+        """Muestra las estadísticas y permite modificar un carro específico."""
+        for widget in scroll_frame.winfo_children():
             widget.destroy()
-        ctk.CTkLabel(frame, text=f"Estadísticas del Carro ID: {carro.id}", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
-        ctk.CTkLabel(frame, text=f"Dirección: {carro.direction}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
+        ctk.CTkLabel(scroll_frame, text=f"Estadísticas del Carro ID: {carro.id}", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=10)
+        ctk.CTkLabel(scroll_frame, text=f"Dirección: {carro.direction}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=3)
 
         # Velocidad modificable (formateada a 2 decimales)
-        ctk.CTkLabel(frame, text="Velocidad:", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
-        velocidad_entry = ctk.CTkEntry(frame)
+        ctk.CTkLabel(scroll_frame, text="Velocidad:", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
+        velocidad_entry = ctk.CTkEntry(scroll_frame)
         velocidad_entry.insert(0, f"{round(carro.original_speed, 2)}")
         velocidad_entry.pack(anchor="w", padx=10, pady=2)
 
         # Descanso modificable (formateada a 2 decimales)
-        ctk.CTkLabel(frame, text="Descanso (s):", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
-        descanso_entry = ctk.CTkEntry(frame)
+        ctk.CTkLabel(scroll_frame, text="Descanso (s):", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=(10,0))
+        descanso_entry = ctk.CTkEntry(scroll_frame)
         descanso_entry.insert(0, f"{round(carro.delay_time, 2)}")
         descanso_entry.pack(anchor="w", padx=10, pady=2)
 
-        ctk.CTkLabel(frame, text=f"Estado actual: {carro.state}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=10)
+        ctk.CTkLabel(scroll_frame, text=f"Estado actual: {carro.state}", font=ctk.CTkFont(size=13)).pack(anchor="w", padx=10, pady=10)
 
         def guardar_config():
+            """Guarda la configuración modificada del carro."""
             try:
                 speed_raw = velocidad_entry.get()
                 delay_raw = descanso_entry.get()
@@ -337,8 +330,8 @@ def abrir_formulario_modificar_carro(lista_carros, lock):
             except Exception as e:
                 tkmsg.showerror("Error", f"Error al guardar: {e}")
 
-        ctk.CTkButton(frame, text="Guardar", command=guardar_config).pack(pady=8)
-        ctk.CTkButton(frame, text="Atrás", command=mostrar_lista_ids).pack(pady=8)
+        ctk.CTkButton(scroll_frame, text="Guardar", command=guardar_config).pack(pady=8)
+        ctk.CTkButton(scroll_frame, text="Atrás", command=mostrar_lista_ids).pack(pady=8)
 
     mostrar_lista_ids()
     app.mainloop()
@@ -350,7 +343,7 @@ def draw_scenery(screen):
     pygame.draw.rect(screen, RIVER_COLOR, (BRIDGE_START_X, 0, BRIDGE_END_X - BRIDGE_START_X, SCREEN_HEIGHT))
     # Carretera
     pygame.draw.rect(screen, ROAD_COLOR, (0, BRIDGE_Y_CENTER - BRIDGE_HEIGHT / 2, SIM_WIDTH, BRIDGE_HEIGHT))
-    pygame.draw.rect(screen, GRAY, (BRIDGE_START_X, BRIDGE_Y_CENTER - 2, BRIDGE_END_X - BRIDGE_START_X, 4)) # Puente
+    pygame.draw.rect(screen, GRAY, (BRIDGE_START_X, BRIDGE_Y_CENTER - 2, BRIDGE_END_X - BRIDGE_START_X, 4))  # Puente
     # Líneas de carril
     for x in range(LANE_LINE_GAP, BRIDGE_START_X - LANE_LINE_WIDTH, LANE_LINE_WIDTH + LANE_LINE_GAP):
         pygame.draw.rect(screen, WHITE, (x, BRIDGE_Y_CENTER - LANE_LINE_HEIGHT / 2, LANE_LINE_WIDTH, LANE_LINE_HEIGHT))
@@ -360,6 +353,13 @@ def draw_scenery(screen):
     pygame.draw.rect(screen, (139, 69, 19), (100, 100, 20, 40)); pygame.draw.circle(screen, (0, 100, 0), (110, 80), 30)
     pygame.draw.rect(screen, (139, 69, 19), (800, 450, 20, 40)); pygame.draw.circle(screen, (0, 100, 0), (810, 430), 30)
     pygame.draw.rect(screen, (139, 69, 19), (50, 500, 20, 40)); pygame.draw.circle(screen, (0, 120, 0), (60, 480), 30)
+
+    # --- NUEVO: Dibuja las palabras "SOUTH" y "NORTH" ---
+    font = pygame.font.SysFont("Arial", 24, bold=True)
+    north_text = font.render("NORTH", True, WHITE)
+    south_text = font.render("SOUTH", True, WHITE)
+    screen.blit(north_text, (50, BRIDGE_Y_CENTER - BRIDGE_HEIGHT - 30))  # NORTH arriba del puente
+    screen.blit(south_text, (800, BRIDGE_Y_CENTER + BRIDGE_HEIGHT - 20))  # SOUTH abajo del puente
 
 def draw_traffic_lights(screen, status):
     """Dibuja los semáforos en los extremos del puente."""
@@ -435,10 +435,11 @@ def draw_stats_panel(screen, status, log, fonts):
 
 
 def main():
+    """Función principal para iniciar la interfaz gráfica y la simulación."""
     pygame.init()
     ctk.set_appearance_mode("system")
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Simulador del Puente de Una Vía - Interfaz Unificada")
+    pygame.display.set_caption("Simulador del Puente de Una Vía")
     clock = pygame.time.Clock()
     fonts = {
         'car_id': pygame.font.SysFont("Arial", 10, bold=True),
@@ -449,11 +450,30 @@ def main():
         'small': pygame.font.SysFont("Consolas", 12),
     }
 
+    # --- Inicializar y cargar música solo una vez ---
+    pygame.mixer.init()
+    music_loaded = False
+    try:
+        pygame.mixer.music.load("assets/Undertale.mp3")
+        music_loaded = True
+    except Exception as e:
+        print(f"Error al reproducir música: {e}")
+
+    # --- Cargar iconos para los botones de música ---
+    try:
+        start_icon_img = pygame.image.load("assets/start_icon.png")
+        stop_icon_img = pygame.image.load("assets/stop_icon.png")
+        start_icon_img = pygame.transform.scale(start_icon_img, (32, 32))
+        stop_icon_img = pygame.transform.scale(stop_icon_img, (32, 32))
+    except Exception:
+        start_icon_img = None
+        stop_icon_img = None
+
     # Iniciar hilo para escuchar al servidor
     network_thread = threading.Thread(target=listen_for_server_updates, daemon=True); network_thread.start()
 
     carros = []
-    num_carros = random.randint(1, 7)
+    num_carros = random.randint(1, 7) # Número aleatorio de carros entre 1 y 7
     for i in range(num_carros):
         carro = Carro(i + 1, random.choice(["NORTH", "SOUTH"]), random.uniform(2, 4), random.uniform(4, 10))
         carros.append(carro)
@@ -461,6 +481,11 @@ def main():
 
     add_button_rect = pygame.Rect(SIM_WIDTH - 160, 10, 150, 40)
     modify_button_rect = pygame.Rect(SIM_WIDTH - 160, 60, 150, 40)
+    music_start_btn_rect = pygame.Rect(20, SCREEN_HEIGHT - 60, 50, 40)
+    music_stop_btn_rect = pygame.Rect(80, SCREEN_HEIGHT - 60, 50, 40)
+
+    music_playing = False  # Estado de la música
+    music_paused_pos = 0   # Posición en milisegundos donde se pausó
 
     ADD_BTN_COLOR = BUTTON_COLOR
     ADD_BTN_HOVER = (130, 130, 255)
@@ -472,9 +497,13 @@ def main():
         mouse_pos = pygame.mouse.get_pos()
         mouse_over_add = add_button_rect.collidepoint(mouse_pos)
         mouse_over_modify = modify_button_rect.collidepoint(mouse_pos)
+        mouse_over_music_start = music_start_btn_rect.collidepoint(mouse_pos)
+        mouse_over_music_stop = music_stop_btn_rect.collidepoint(mouse_pos)
 
-        # Cambiar cursor si está sobre los botones
-        if mouse_over_add or mouse_over_modify:
+        # Cambiar cursor si está sobre los botones habilitados
+        if (mouse_over_add or mouse_over_modify or
+            (mouse_over_music_start and not music_playing) or
+            (mouse_over_music_stop and music_playing)):
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
         else:
             pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
@@ -488,6 +517,16 @@ def main():
                 if modify_button_rect.collidepoint(event.pos):
                     form_thread = threading.Thread(target=abrir_formulario_modificar_carro, args=(carros, carros_lock), daemon=True)
                     form_thread.start()
+                # Solo permite click si el botón está habilitado
+                if music_start_btn_rect.collidepoint(event.pos) and not music_playing:
+                    if music_loaded:
+                        pygame.mixer.music.play(-1, start=music_paused_pos / 1000.0)
+                        music_playing = True
+                if music_stop_btn_rect.collidepoint(event.pos) and music_playing:
+                    # Guardar posición actual antes de detener
+                    music_paused_pos = pygame.mixer.music.get_pos()
+                    pygame.mixer.music.stop()
+                    music_playing = False
 
         # --- Lógica de Dibujo ---
         draw_scenery(screen)
@@ -500,17 +539,46 @@ def main():
         draw_traffic_lights(screen, status_copy)
         draw_stats_panel(screen, status_copy, log_copy, fonts)
 
-        # Dibujar botón "Agregar" con hover
+        #Botón "Agregar" con hover
         pygame.draw.rect(screen, ADD_BTN_HOVER if mouse_over_add else ADD_BTN_COLOR, add_button_rect)
         add_text = fonts['button'].render("Agregar Carro", True, BUTTON_TEXT_COLOR)
         screen.blit(add_text, (add_button_rect.x + (add_button_rect.width - add_text.get_width()) / 2, 
                                add_button_rect.y + (add_button_rect.height - add_text.get_height()) / 2))
 
-        # Dibujar botón "Modificar" con hover
+        # Botón "Modificar" with hover
         pygame.draw.rect(screen, MODIFY_BTN_HOVER if mouse_over_modify else MODIFY_BTN_COLOR, modify_button_rect)
         modify_text = fonts['button'].render("Modificar", True, BUTTON_TEXT_COLOR)
         screen.blit(modify_text, (modify_button_rect.x + (modify_button_rect.width - modify_text.get_width()) / 2,
                                   modify_button_rect.y + (modify_button_rect.height - modify_text.get_height()) / 2))
+
+        # Botones de música       
+        start_btn_color = (70, 180, 70) if (mouse_over_music_start and not music_playing) else (100, 220, 100)
+        stop_btn_color = (180, 70, 70) if (mouse_over_music_stop and music_playing) else (220, 100, 100)
+        if music_playing:
+            start_btn_alpha = 120  # Deshabilitado
+            stop_btn_alpha = 255
+        else:
+            start_btn_alpha = 255
+            stop_btn_alpha = 120  # Deshabilitado
+
+        # Crear superficies con alpha para simular deshabilitado
+        start_btn_surface = pygame.Surface((music_start_btn_rect.width, music_start_btn_rect.height), pygame.SRCALPHA)
+        stop_btn_surface = pygame.Surface((music_stop_btn_rect.width, music_stop_btn_rect.height), pygame.SRCALPHA)
+        start_btn_surface.fill((*start_btn_color, start_btn_alpha))
+        stop_btn_surface.fill((*stop_btn_color, stop_btn_alpha))
+        screen.blit(start_btn_surface, (music_start_btn_rect.x, music_start_btn_rect.y))
+        screen.blit(stop_btn_surface, (music_stop_btn_rect.x, music_stop_btn_rect.y))
+
+        if start_icon_img:
+            screen.blit(start_icon_img, (music_start_btn_rect.x + 9, music_start_btn_rect.y + 4))
+        else:
+            start_text = fonts['button'].render("Play", True, WHITE if not music_playing else GRAY)
+            screen.blit(start_text, (music_start_btn_rect.x + 5, music_start_btn_rect.y + 8))
+        if stop_icon_img:
+            screen.blit(stop_icon_img, (music_stop_btn_rect.x + 9, music_stop_btn_rect.y + 4))
+        else:
+            stop_text = fonts['button'].render("Stop", True, WHITE if music_playing else GRAY)
+            screen.blit(stop_text, (music_stop_btn_rect.x + 5, music_stop_btn_rect.y + 8))
 
         with carros_lock:
             for carro in list(carros):
