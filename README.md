@@ -22,7 +22,7 @@ Este proyecto simula la gestión de tráfico en un puente de una sola vía, util
 - [pygame](https://www.pygame.org/)
 - [customtkinter](https://github.com/TomSchimansky/CustomTkinter)
 - [Pillow](https://python-pillow.org/) (solo para el menú)
-- (Opcional) Carpeta `assets` con imágenes para el menú
+- Carpeta `assets` con imágenes para el menú
 
 Instala las dependencias con:
 
