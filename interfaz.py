@@ -343,7 +343,7 @@ def draw_scenery(screen):
     pygame.draw.rect(screen, RIVER_COLOR, (BRIDGE_START_X, 0, BRIDGE_END_X - BRIDGE_START_X, SCREEN_HEIGHT))
     # Carretera
     pygame.draw.rect(screen, ROAD_COLOR, (0, BRIDGE_Y_CENTER - BRIDGE_HEIGHT / 2, SIM_WIDTH, BRIDGE_HEIGHT))
-    pygame.draw.rect(screen, GRAY, (BRIDGE_START_X, BRIDGE_Y_CENTER - 2, BRIDGE_END_X - BRIDGE_START_X, 4)) # Puente
+    pygame.draw.rect(screen, GRAY, (BRIDGE_START_X, BRIDGE_Y_CENTER - 2, BRIDGE_END_X - BRIDGE_START_X, 4))  # Puente
     # Líneas de carril
     for x in range(LANE_LINE_GAP, BRIDGE_START_X - LANE_LINE_WIDTH, LANE_LINE_WIDTH + LANE_LINE_GAP):
         pygame.draw.rect(screen, WHITE, (x, BRIDGE_Y_CENTER - LANE_LINE_HEIGHT / 2, LANE_LINE_WIDTH, LANE_LINE_HEIGHT))
@@ -353,6 +353,13 @@ def draw_scenery(screen):
     pygame.draw.rect(screen, (139, 69, 19), (100, 100, 20, 40)); pygame.draw.circle(screen, (0, 100, 0), (110, 80), 30)
     pygame.draw.rect(screen, (139, 69, 19), (800, 450, 20, 40)); pygame.draw.circle(screen, (0, 100, 0), (810, 430), 30)
     pygame.draw.rect(screen, (139, 69, 19), (50, 500, 20, 40)); pygame.draw.circle(screen, (0, 120, 0), (60, 480), 30)
+
+    # --- NUEVO: Dibuja las palabras "SOUTH" y "NORTH" ---
+    font = pygame.font.SysFont("Arial", 24, bold=True)
+    north_text = font.render("NORTH", True, WHITE)
+    south_text = font.render("SOUTH", True, WHITE)
+    screen.blit(north_text, (50, BRIDGE_Y_CENTER - BRIDGE_HEIGHT - 30))  # NORTH arriba del puente
+    screen.blit(south_text, (800, BRIDGE_Y_CENTER + BRIDGE_HEIGHT - 20))  # SOUTH abajo del puente
 
 def draw_traffic_lights(screen, status):
     """Dibuja los semáforos en los extremos del puente."""
