@@ -57,7 +57,7 @@ pip install -r requeriments.txt
 
 - Los vehículos no se superponen al panel lateral.
 - Solo se pueden modificar los parámetros de velocidad y descanso de los vehículos.
-- El menú requiere imágenes en la carpeta `assets` para los iconos (opcional).
+- El menú requiere imágenes en la carpeta `assets` para los iconos.
 
 ## Créditos
 
