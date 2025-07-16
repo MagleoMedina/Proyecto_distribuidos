@@ -122,7 +122,7 @@ class Carro:
                 else: 
                     self.state = 'IDLE'
             else: # SOUTH
-                # Esta parte ya era correcta
+                # 
                 if self.rect.right > -CAR_WIDTH: 
                     self.rect.x -= self.speed
                 else: 
@@ -354,7 +354,7 @@ def draw_scenery(screen):
     pygame.draw.rect(screen, (139, 69, 19), (800, 450, 20, 40)); pygame.draw.circle(screen, (0, 100, 0), (810, 430), 30)
     pygame.draw.rect(screen, (139, 69, 19), (50, 500, 20, 40)); pygame.draw.circle(screen, (0, 120, 0), (60, 480), 30)
 
-    # --- NUEVO: Dibuja las palabras "SOUTH" y "NORTH" ---
+    # --- Palabras "SOUTH" y "NORTH" ---
     font = pygame.font.SysFont("Arial", 24, bold=True)
     north_text = font.render("NORTH", True, WHITE)
     south_text = font.render("SOUTH", True, WHITE)
@@ -545,7 +545,7 @@ def main():
         screen.blit(add_text, (add_button_rect.x + (add_button_rect.width - add_text.get_width()) / 2, 
                                add_button_rect.y + (add_button_rect.height - add_text.get_height()) / 2))
 
-        # Botón "Modificar" with hover
+        # Botón "Modificar" con hover
         pygame.draw.rect(screen, MODIFY_BTN_HOVER if mouse_over_modify else MODIFY_BTN_COLOR, modify_button_rect)
         modify_text = fonts['button'].render("Modificar", True, BUTTON_TEXT_COLOR)
         screen.blit(modify_text, (modify_button_rect.x + (modify_button_rect.width - modify_text.get_width()) / 2,
